@@ -1,6 +1,10 @@
 (in-package :collections)
 
+;;;; Some stuff to help defining new pages
+
 (defmacro let-after-fun (binds fun &body body)
+  "Apply the function FUN to a quote of every element of BINDS
+   and bind the result to the symbol"
   `(let ,(mapcar #'(lambda (x)
 		   `(,x (,fun ',x)))
 		 binds)
@@ -8,21 +12,22 @@
 
 (defmacro with-gensyms (syms &body body)
   "The well-known WITH-GENSYMS macro, using LET-AFTER-FUN.
-  See On Lisp by Paul Graham, page 145"
+  See On Lisp by Paul Graham, page 145 for a normal definition"
   `(let-after-fun ,syms (lambda (x)
                           (declare (ignore x))
                           (gensym))
      ,@body))
 
 (defmacro add-page (path params &body body)
-  "Publish a page"
+  "Publish a page easily"
   (with-gensyms (req ent)
   `(publish :path ,path :content-type "text/html"
             :function
             (lambda (,req ,ent)
               (let-after-fun ,params
                              (lambda (x)
-                               (request-query-value x ,req))
+                               (request-query-value
+                                (string-downcase (string x)) ,req))
                 (with-http-response (,req ,ent)
                   (with-http-body (,req ,ent)
                     ,@body)))))))
@@ -30,29 +35,39 @@
 (defmacro define-page (name params (&key (title "No title")) &body body)
   `(defun ,name ,params
      (html
+      (:html
        (:head (:title ,title))
-       (:body ,@body))))
+       (:body ,@body)))))
+
+;;;; defined as a macro because the body contains
+;;;; html's specials form
+(defmacro standard-page (title &body body)
+  `(html
+    (:html
+     (:head (:title ,title))
+     (:body ,@body))))
 
 (define-page error-page (reason) (:title "Error") 
   (:h1 "Error")
-  (:p "An error as occured : " (:princ-safe reason)))
+  (:p "An error as occured : " (:b (:princ-safe reason))))
 
-(define-page info-page (info) (:title info)
-  (:p info))
+(define-page info-page (info) (:title (:princ-safe info))
+  (:p (:princ-safe info)))
 
-(add-page "register.html" (name password)
-  (if (and name pwd)
+;;;; The interface's function start here
+(add-page "/register.html" (name password)
+  (if (and name password)
     ;; registration
     (handler-case 
       (progn
-        (register-user name pwd)
+        ;(register-user name password)
         (info-page "You're now registered, welcome !"))
       (registration-error (err) (error-page 
                                   (concatenate 'string
                                                "Error when registrating : "
                                                (reason err)))))
     ;; form
-    (standard-page
+    (standard-page "Registration"
       ((:form :action "register.html" :method "post")
        "Username : " ((:input :type "text"
                               :name "name"
