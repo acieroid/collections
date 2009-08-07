@@ -25,8 +25,6 @@
   (byte-array-to-hex-string
     (digest-sequence *digest-algorithm*
                      (ascii-string-to-byte-array string))))
-(defun hash (string) ; TODO: ironclad not loading in slime
-  string)
 
 (defun user-exists-p (name)
   "Check if there is already an user with name NAME"
@@ -48,6 +46,7 @@
       (make-instance 'user
                      :name name
                      :password (hash password)))))
+
 (defun login-user (name password)
   "Login a user, launch a LOGIN-ERROR in case of errors"
   (cond

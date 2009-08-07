@@ -2,9 +2,9 @@
   (:use :cl 
         :net.aserve :net.html.generator
         :clsql
- ;       :ironclad
+        :ironclad
         )
-;  (:shadowing-import-from :ironclad :NULL)
+  (:shadowing-import-from :ironclad :NULL)
   )
 
 ; fix from
