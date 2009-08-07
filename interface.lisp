@@ -60,7 +60,7 @@
     ;; registration
     (handler-case 
       (progn
-        ;(register-user name password)
+        (register-user name password)
         (info-page "You're now registered, welcome !"))
       (registration-error (err) (error-page 
                                   (concatenate 'string
