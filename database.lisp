@@ -7,7 +7,7 @@
   (connect '(*db-name*) :database-type :sqlite3)
   (enable-sql-reader-syntax))
 
-;(defun create-tables ()
-;  (create-view-from-classe 'element)
-;  (create-view-from-classe 'user))
+(defun create-tables ()
+  (create-view-from-class 'element)
+  (create-view-from-class 'user))
 

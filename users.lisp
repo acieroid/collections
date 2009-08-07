@@ -23,6 +23,8 @@
   (byte-array-to-hex-string
     (digest-sequence *digest-algorithm*
                      (ascii-string-to-byte-array string))))
+(defun hash (string)
+  string)
 
 (defun register-user (name password)
   "Register an user, launch a REGISTRATION-ERROR in case of errors"
