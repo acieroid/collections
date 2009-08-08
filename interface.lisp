@@ -54,25 +54,47 @@
 (define-page info-page (info) (:title (:princ-safe info))
   (:p (:princ-safe info)))
 
+(defmacro user-pass-form (page submit-value)
+  "A form with username and password fields"
+  `(standard-page ,submit-value
+     ((:form :action ,page :method "post")
+      "Username : " ((:input :type "text"
+                             :name "name"
+                             :maxlength "20"))
+      "Password : " ((:input :type "password"
+                             :name "password"
+                             :maxlength "20"))
+      ((:input :type "submit" :value ,submit-value)))))
+
 ;;;; The interface's function start here
 (add-page "/register.html" (name password)
   (if (and name password)
-    ;; registration
-    (handler-case 
-      (progn
-        (register-user name password)
-        (info-page "You're now registered, welcome !"))
-      (registration-error (err) (error-page 
-                                  (concatenate 'string
-                                               "Error when registrating : "
-                                               (reason err)))))
-    ;; form
-    (standard-page "Registration"
-      ((:form :action "register.html" :method "post")
-       "Username : " ((:input :type "text"
-                              :name "name"
-                              :maxlength "20"))
-       "Password : " ((:input :type "password"
-                              :name "password"
-                              :maxlength "20"))
-       ((:input :type "submit" :value "Register"))))))
+      ;; registration
+      (handler-case 
+          (progn
+            (register-user name password)
+            (info-page "You're now registered, welcome !"))
+        (registration-error (err) (error-page 
+                                   (concatenate 'string
+                                                "Error when registrating : "
+                                                (reason err)))))
+      ;; form
+      (user-pass-form "register.html" "Register")))
+
+(add-page "/login.html" (name password)
+  (if (and name password)
+      (handler-case
+          (progn
+            (login-user name password)
+            (info-page "You're now logged"))
+        (login-error (err)
+          (error-page (concatenate 'string "error during login, "
+                                   (reason err)))))
+      (user-pass-form "login.html" "Login")))
+
+
+
+       
+          
+            
+      

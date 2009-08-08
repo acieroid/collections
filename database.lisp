@@ -4,11 +4,12 @@
   "The name of the database")
 
 (defun connect-db ()
-  (connect (list *db-name*) :database-type :sqlite3)
-  (enable-sql-reader-syntax))
+  (connect (list *db-name*) :database-type :sqlite3))
 
 (defun create-tables ()
   (create-view-from-class 'element)
   (create-view-from-class 'user))
+
+
 
 

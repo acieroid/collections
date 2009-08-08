@@ -24,8 +24,9 @@
   (update-records-from-instance el))
 
 (defun get-all-elements ()
-  (select 'element))
+  "Return a list of all the elements"
+  ; must loop because select return each element in a list
+  (loop for i in (select 'element :where [= 1 1]) ; don't work without :where
+       collect (car i)))
 
-(add-element (make-instance 'element :name "lol"))
-(add-element (make-instance 'element :name "lal"))
-(get-all-elements)
+  
