@@ -49,7 +49,7 @@
 
 (define-page error-page (reason) (:title "Error") 
   (:h1 "Error")
-  (:p "An error as occured : " (:b (:princ-safe reason))))
+  (:p (:princ-safe reason)))
 
 (define-page info-page (info) (:title (:princ-safe info))
   (:p (:princ-safe info)))
@@ -67,7 +67,9 @@
       ((:input :type "submit" :value ,submit-value)))))
 
 ;;;; The interface's function start here
-(add-page "/register.html" (name password)
+
+;;;; Pages related to authentification
+(add-page "/register" (name password)
   (if (and name password)
       ;; registration
       (handler-case 
@@ -77,11 +79,12 @@
         (registration-error (err) (error-page 
                                    (concatenate 'string
                                                 "Error when registrating : "
-                                                (reason err)))))
+                                                (reason err))))
+        (simple-error () (error-page "An unknown error happened")))
       ;; form
-      (user-pass-form "register.html" "Register")))
+      (user-pass-form "register" "Register")))
 
-(add-page "/login.html" (name password)
+(add-page "/login" (name password)
   (if (and name password)
       (handler-case
           (progn
@@ -90,11 +93,20 @@
         (login-error (err)
           (error-page (concatenate 'string "error during login, "
                                    (reason err)))))
-      (user-pass-form "login.html" "Login")))
+      (user-pass-form "login" "Login")))
 
+; pages related to the collection
+(add-page "/list" ()
+  (standard-page "List"
+    (dolist (element (get-all-elements))
+      (html (:h2 (:princ-safe (name element)))
+            (:p "Score " (:princ-safe (score element))
+                ((:a href (concatenate
+                           'string "vote?id=" (write-to-string (id element))))
+                 "(+1)"))))))
+;(add-page "/vote" (id)
+;  (if id
+;      (vote-for 
 
-
-       
-          
-            
       
+

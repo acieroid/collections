@@ -7,9 +7,7 @@
   (connect (list *db-name*) :database-type :sqlite3))
 
 (defun create-tables ()
-  (create-view-from-class 'element)
-  (create-view-from-class 'user))
-
-
-
+  (mapcar (lambda (table) (unless (table-exists-p table)
+                            (create-view-from-class table)))
+          '(element user)))
 

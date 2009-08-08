@@ -3,9 +3,9 @@
 (defparameter *digest-algorithm* :sha1
   "The digest algorithm used for the passwords")
 
-(define-condition registration-error (error)
+(define-condition registration-error (simple-error)
   ((reason :initarg :reason :reader reason)))
-(define-condition login-error (error)
+(define-condition login-error (simple-error)
   ((reason :initarg :reason :reader reason)))
 
 (def-view-class user ()
@@ -80,4 +80,3 @@
      (t ; TODO some stuff here ?
       'ok)))
 
-(register
