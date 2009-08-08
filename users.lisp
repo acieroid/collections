@@ -3,11 +3,6 @@
 (defparameter *digest-algorithm* :sha1
   "The digest algorithm used for the passwords")
 
-(define-condition registration-error (simple-error)
-  ((reason :initarg :reason :reader reason)))
-(define-condition login-error (simple-error)
-  ((reason :initarg :reason :reader reason)))
-
 (def-view-class user ()
   ((id :type integer 
        :db-kind :key)
@@ -54,14 +49,12 @@
   (valid-username-p password))
 
 (defun register-user (name password)
-  "Register an user, launch a REGISTRATION-ERROR in case of errors"
+  "Register an user, can launch an error"
   (cond
     ((user-exists-p name)
-     (error 'registration-error 
-            :reason "User already registered"))
+     (launch-error "login" "user already registered"))
     ((or (not (valid-username-p name)) (not (valid-password-p password)))
-     (error 'registration-error
-            :reason "Not valid name or password"))
+     (launch-error "login" "not valid name or password"))
     (t
      (update-records-from-instance
       (make-instance 'user
@@ -69,14 +62,12 @@
                      :password (hash password))))))
 
 (defun login-user (name password)
-  "Login a user, launch a LOGIN-ERROR in case of errors"
+  "Log a user in, can launch an error"
   (cond
     ((not (user-exists-p name))
-      (error 'login-error
-             :reason "User don't exists"))
-     ((not (correct-login-p name password))
-      (error 'login-error
-             :reason "Invalid identifiers"))
-     (t ; TODO some stuff here ?
-      'ok)))
+     (launch-error "registration" "user don't exists"))
+    ((not (correct-login-p name password))
+     (launch-error "registration" "invalid identifiers"))
+    (t ; TODO some stuff here ?
+     'ok)))
 

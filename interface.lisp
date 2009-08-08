@@ -2,6 +2,15 @@
 
 ;;;; Some stuff to help defining new pages
 
+(defmacro handle-errors (&body body)
+  `(handler-case
+       (progn ,@body)
+     (an-error (e) (error-page
+                    (format nil "An error has occured during ~a : ~a"
+                            (error-type e) (description e))))
+     (simple-error () (error-page
+                       (format nil "An unknown error happened")))))
+
 (defmacro let-after-fun (binds fun &body body)
   "Apply the function FUN to a quote of every element of BINDS
    and bind the result to the symbol"
@@ -72,27 +81,17 @@
 (add-page "/register" (name password)
   (if (and name password)
       ;; registration
-      (handler-case 
-          (progn
-            (register-user name password)
-            (info-page "You're now registered, welcome !"))
-        (registration-error (err) (error-page 
-                                   (concatenate 'string
-                                                "Error when registrating : "
-                                                (reason err))))
-        (simple-error () (error-page "An unknown error happened")))
+      (handle-errors
+        (register-user name password)
+        (info-page "You're now registered, welcome !"))
       ;; form
       (user-pass-form "register" "Register")))
 
 (add-page "/login" (name password)
   (if (and name password)
-      (handler-case
-          (progn
-            (login-user name password)
-            (info-page "You're now logged"))
-        (login-error (err)
-          (error-page (concatenate 'string "error during login, "
-                                   (reason err)))))
+      (handle-errors
+        (login-user name password)
+        (info-page "You're now logged"))
       (user-pass-form "login" "Login")))
 
 ; pages related to the collection
