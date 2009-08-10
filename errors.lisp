@@ -9,6 +9,7 @@
              (format stream
                      "Error not handled!~%Type: ~a~%Description: ~a"
                      (error-type e) (description e)))))
+
 (defun launch-error (type description)
   "Launch an error of the AN-ERROR class"
   (declaim (inline launch-error))

@@ -8,7 +8,8 @@
                     (format nil "An error has occured during ~a : ~a"
                             (error-type e) (description e))))
      (simple-error () (error-page
-                       (format nil "An unknown error happened")))))
+                      (format nil "An unknown error happened")))))
+     ))
 
 (defmacro add-page (path params &body body)
   "Publish a page easily"
@@ -61,17 +62,42 @@
 (defmacro format-safe (control-string &rest arguments)
   `(:princ-safe (format nil ,control-string ,@arguments)))
 
+#.(locally-enable-sql-reader-syntax)
 (defmethod htmlize ((what item))
   (let ((id (write-to-string (id what))))
     (html (:h2
-           ((:a href (concatenate 'string "view?id="
+           ((:a href (concatenate 'string "viewitem?id="
                                   id))
             (:princ-safe (name what))))
           (:p (:princ-safe (description what)))
-          (:p (format-safe "~a vote~:p" (votes what))
+          (:p (format-safe "~d vote~:p " (votes what))
               ((:a href (concatenate
-                         'string "view?vote&id=" id))
+                         'string "viewitem?vote&id=" id))
+               "(+1)")
+              (:br)
+              ((:a href (concatenate 'string
+                                     "viewitem?id=" id))
+               (format-safe "~d note~:p"
+                            (count-instances
+                             [note]
+                             [= [slot-value 'note 'item-id]
+                                (id what)])))
+              " "
+              ((:a href (concatenate
+                         'string "addnote?itemid=" id))
+               "(add)")))))
+(defmethod htmlize ((what note))
+  (let ((id (write-to-string (id what))))
+    (html (:b
+           ((:a href (concatenate 'string "viewnote?id="
+                                  id))
+            (:princ-safe (title what))))
+          (:p (:princ-safe (content what)))
+          (:p (format-safe "~d vote~:p " (votes what))
+              ((:a href (concatenate
+                         'string "viewnote?vote&id=" id))
                "(+1)")))))
+#.(locally-disable-sql-reader-syntax)                  
 
 ;;; The interface's function start here
 
@@ -95,20 +121,33 @@
 ;;; pages related to the collection
 (add-page "/list" ()
   (standard-page "List"
-    (dolist (item (get-all-instances 'item))
-      (htmlize item))))
+    (mapcar #'htmlize (get-all-instances 'item))))
 
-(add-page "/view" (id vote)
-  (let ((item (get-instance-by-id 'item
-               (parse-integer id :junk-allowed t))))
+(add-page "/viewitem" (id vote)
+  (let ((item
+         (when id
+           (get-instance-by-id
+            'item (parse-integer id :junk-allowed t)))))
     (if item
-        (progn
+        (handle-errors
           (when vote (vote-for item))
           (standard-page (:princ-safe (name item))
-            (htmlize item)))
-        (error-page "bad id specified"))))
+            (htmlize item))
+          (mapcar #'htmlize (notes item)))
+        (error-page "bad id"))))
 
-(add-page "/add" (name image descr)
+(add-page "/viewnote" (id vote)
+  (if id
+      (let* ((id (parse-integer id :junk-allowed t))
+             (note (get-instance-by-id id)))
+        (if note
+            (handle-errors
+             (vote-for note)
+             (htmlize note))
+            (error-page "bad id")))
+      (error-page "bad id")))
+
+(add-page "/additem" (name image descr)
   (if (and name image descr)
       (handle-errors
         (let ((item (make-with-id 'item
@@ -118,7 +157,7 @@
           (add-instance item))
         (standard-page "Adding an item" "The item has ben added"))
       (standard-page "Adding an item"
-          ((:form :action "/add" :method "post")
+          ((:form :action "/additem" :method "post")
            "Name : " ((:input :type "text"
                               :name "name"
                               :maxlength "100"))
@@ -133,4 +172,31 @@
                                     :maxlength "100"))
            (:br)
            ((:input :type "submit" :value "Add"))))))
+
+(add-page "/addnote" (itemid title content)
+  (cond
+    ((and itemid title content)
+      (handle-errors
+        (let ((note (make-with-id 'note
+                                  :title title
+                                  :item-id
+                                   (parse-integer itemid :junk-allowed t)
+                                  :content content)))
+          (add-instance note))
+        (standard-page "Adding a note" "The note has ben added")))
+    (itemid
+      (standard-page "Adding a note"
+          ((:form :action "/addnote" :method "post")
+           "Title : " ((:input :type "text"
+                               :name "title"
+                               :maxlength "100"))
+           (:br)
+           "Content : " (:br) ((:textarea
+                                :name "content"
+                                :rows "15"
+                                :cols "50"))
+           ((:input :type "hidden" :name "itemid" :value itemid))
+           (:br)
+           ((:input :type "submit" :value "Add")))))
+    (t (error-page "No item selected"))))
 

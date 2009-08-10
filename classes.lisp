@@ -38,7 +38,7 @@
              :initarg :item-id)))
 
 (defmethod vote-for ((thing votable))
-  (incf (score thing))
+  (incf (votes thing))
   (update-records-from-instance thing))
 
 #.(locally-enable-sql-reader-syntax)
@@ -48,18 +48,24 @@
                 :refresh t)))
 
 (defun get-all-instances (class)
-  ; must loop because select return each element in a list
+  ;; must loop because select return each element in a list
   (loop for i in (select class :refresh t)
        collect (car i)))
 #.(restore-sql-reader-syntax-state)
 
 (defmethod add-instance (instance)
-  "Add something to the database"
   (update-records-from-instance instance))
 
+(defmethod add-instance ((note note))
+  ;; check that the item exists 
+  (unless (get-instance-by-id 'item (item-id note))
+    (launch-error "adding a note"
+                  "bad item"))
+  (call-next-method))
+
 (defmacro count-instances (class &rest args)
-  `(caar (select [count [*]] :from [,class]
-                 ,@(when args `(:where ,@args)))))
+  `(caar (select [count [*]] :from ,class
+                ,@(when args `(:where ,@args)))))
 
 (defmacro make-with-id (class &rest args)
   `(make-instance ,class ,@args :id (1+ (length (get-all-instances ,class)))))
