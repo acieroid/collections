@@ -51,9 +51,9 @@
   "Register an user, can launch an error"
   (cond
     ((user-exists-p name)
-     (launch-error "login" "user already registered"))
+     (launch-error "register" "user already registered"))
     ((or (not (valid-username-p name)) (not (valid-password-p password)))
-     (launch-error "login" "not valid name or password"))
+     (launch-error "register" "not valid name or password"))
     (t
      (update-records-from-instance
       (make-instance 'user
@@ -64,9 +64,9 @@
   "Log a user in, can launch an error"
   (cond
     ((not (user-exists-p name))
-     (launch-error "registration" "user don't exists"))
+     (launch-error "login" "user don't exists"))
     ((not (correct-login-p name password))
-     (launch-error "registration" "invalid identifiers"))
+     (launch-error "login" "invalid identifiers"))
     (t ; TODO some stuff here ?
      'ok)))
 

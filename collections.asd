@@ -21,13 +21,13 @@
                                    "errors"
                                    "utilities"
                                    "users"
-                                   "elements"))
+                                   "classes"))
                (:file "users"
                       :depends-on ("database"
                                    "package"
                                    "errors"
                                    "utilities"))
-               (:file "elements"
+               (:file "classes"
                       :depends-on ("database"
                                    "package"
                                    "errors"

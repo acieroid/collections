@@ -15,7 +15,7 @@
   (with-gensyms (req ent)
   `(publish :path ,path :content-type "text/html"
             :function
-            (lambda (,req ,ent)
+            (lambda (,req ,ent) 
               (let-after-fun ,params
                              (lambda (x)
                                (request-query-value
@@ -61,16 +61,16 @@
 (defmacro format-safe (control-string &rest arguments)
   `(:princ-safe (format nil ,control-string ,@arguments)))
 
-(defun htmlize-element (element)
-  (let ((id (write-to-string (id element))))
+(defmethod htmlize ((what item))
+  (let ((id (write-to-string (id what))))
     (html (:h2
            ((:a href (concatenate 'string "view?id="
                                   id))
-            (:princ-safe (name element))))
-          (:p (:princ-safe (description element)))
-          (:p (format-safe "~a vote~:p" (score element))
+            (:princ-safe (name what))))
+          (:p (:princ-safe (description what)))
+          (:p (format-safe "~a vote~:p" (votes what))
               ((:a href (concatenate
-                         'string "view?vote&id=" (write-to-string (id element))))
+                         'string "view?vote&id=" id))
                "(+1)")))))
 
 ;;; The interface's function start here
@@ -95,28 +95,29 @@
 ;;; pages related to the collection
 (add-page "/list" ()
   (standard-page "List"
-    (dolist (element (get-all-elements))
-      (htmlize-element element))))
+    (dolist (item (get-all-instances 'item))
+      (htmlize item))))
 
 (add-page "/view" (id vote)
-  (let ((element (get-element-by-id
-                  (parse-integer id :junk-allowed t))))
-    (if element
+  (let ((item (get-instance-by-id 'item
+               (parse-integer id :junk-allowed t))))
+    (if item
         (progn
-          (when vote (vote-for element))
-          (standard-page (:princ-safe (name element))
-            (htmlize-element element)))
+          (when vote (vote-for item))
+          (standard-page (:princ-safe (name item))
+            (htmlize item)))
         (error-page "bad id specified"))))
 
 (add-page "/add" (name image descr)
   (if (and name image descr)
       (handle-errors
-        (let ((el (make-element :name name
-                                :image image
-                                :description descr)))
-          (add-element el))
-        (standard-page "Adding an element" "The element has ben added"))
-      (standard-page "Adding an element"
+        (let ((item (make-with-id 'item
+                                  :name name
+                                  :image image
+                                  :description descr)))
+          (add-instance item))
+        (standard-page "Adding an item" "The item has ben added"))
+      (standard-page "Adding an item"
           ((:form :action "/add" :method "post")
            "Name : " ((:input :type "text"
                               :name "name"
@@ -132,3 +133,4 @@
                                     :maxlength "100"))
            (:br)
            ((:input :type "submit" :value "Add"))))))
+
