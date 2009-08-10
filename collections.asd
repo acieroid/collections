@@ -12,13 +12,24 @@
                (:file "errors"
                       :depends-on ("package"))
                (:file "collections"
-                      :depends-on ("package" "database"))
+                      :depends-on ("package"
+                                   "database"))
                (:file "database"
                       :depends-on ("package"))
                (:file "interface"
-                      :depends-on ("package" "errors" "utilities"))
+                      :depends-on ("package"
+                                   "errors"
+                                   "utilities"
+                                   "users"
+                                   "elements"))
                (:file "users"
-                      :depends-on ("database" "package" "errors" "utilities"))
+                      :depends-on ("database"
+                                   "package"
+                                   "errors"
+                                   "utilities"))
                (:file "elements"
-                      :depends-on ("database" "package" "errors" "utilities"))))
+                      :depends-on ("database"
+                                   "package"
+                                   "errors"
+                                   "utilities"))))
 

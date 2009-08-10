@@ -10,22 +10,6 @@
      (simple-error () (error-page
                        (format nil "An unknown error happened")))))
 
-(defmacro let-after-fun (binds fun &body body)
-  "Apply the function FUN to a quote of every element of BINDS
-   and bind the result to the symbol"
-  `(let ,(mapcar #'(lambda (x)
-		   `(,x (,fun ',x)))
-		 binds)
-     ,@body))
-
-(defmacro with-gensyms (syms &body body)
-  "The well-known WITH-GENSYMS macro, using LET-AFTER-FUN.
-  See On Lisp by Paul Graham, page 145 for a normal definition"
-  `(let-after-fun ,syms (lambda (x)
-                          (declare (ignore x))
-                          (gensym))
-     ,@body))
-
 (defmacro add-page (path params &body body)
   "Publish a page easily"
   (with-gensyms (req ent)
@@ -74,6 +58,21 @@
                              :maxlength "20"))
       ((:input :type "submit" :value ,submit-value)))))
 
+(defmacro format-safe (control-string &rest arguments)
+  `(:princ-safe (format nil ,control-string ,@arguments)))
+
+(defun htmlize-element (element)
+  (let ((id (write-to-string (id element))))
+    (html (:h2
+           ((:a href (concatenate 'string "view?id="
+                                  id))
+            (:princ-safe (name element))))
+          (:p (:princ-safe (description element)))
+          (:p (format-safe "~a vote~:p" (score element))
+              ((:a href (concatenate
+                         'string "view?vote&id=" (write-to-string (id element))))
+               "(+1)")))))
+
 ;;; The interface's function start here
 
 ;;; Pages related to authentification
@@ -97,23 +96,24 @@
 (add-page "/list" ()
   (standard-page "List"
     (dolist (element (get-all-elements))
-      (html (:h2 (:princ-safe (name element)))
-            (:p "Score " (:princ-safe (score element))
-                ((:a href (concatenate
-                           'string "vote?id=" (write-to-string (id element))))
-                 "(+1)"))))))
-(add-page "/vote" (id)
-  (if id
-      (handle-errors
-        (vote-for-id id)
-        (standard-page "Vote" "Thanks for the vote"))
-      (error-page "No id specified")))
+      (htmlize-element element))))
 
-(add-page "/add" (name image)
-  (if (and name image)
+(add-page "/view" (id vote)
+  (let ((element (get-element-by-id
+                  (parse-integer id :junk-allowed t))))
+    (if element
+        (progn
+          (when vote (vote-for element))
+          (standard-page (:princ-safe (name element))
+            (htmlize-element element)))
+        (error-page "bad id specified"))))
+
+(add-page "/add" (name image descr)
+  (if (and name image descr)
       (handle-errors
         (let ((el (make-element :name name
-                                :image image)))
+                                :image image
+                                :description descr)))
           (add-element el))
         (standard-page "Adding an element" "The element has ben added"))
       (standard-page "Adding an element"
@@ -121,7 +121,14 @@
            "Name : " ((:input :type "text"
                               :name "name"
                               :maxlength "100"))
+           (:br)
+           "Description : " (:br) ((:textarea
+                                    :name "descr"
+                                    :rows "15"
+                                    :cols "50"))
+           (:br)
            "Image path : " ((:input :type "text"
                                     :name "image"
                                     :maxlength "100"))
+           (:br)
            ((:input :type "submit" :value "Add"))))))

@@ -6,12 +6,16 @@
        :initarg :id
        :accessor id)
    (name :accessor name
-         :type (string 100)
+         :type (string)
          :initarg :name)
    (image :accessor image
-          :type (string 100)
+          :type (string)
           :initarg :image
-          :initform nil)
+          :initform "")
+   (description :accessor description
+                :type (string)
+                :initarg :description
+                :initform "")
    (score :accessor score
           :type integer
           :initform 0)))
@@ -33,11 +37,10 @@
   "Add an element to the database"
   (update-records-from-instance el))
 
-(defun vote-for-id (id)
+(defmethod vote-for ((el element))
   "Vote for an element with its id"
-  (let ((element (get-element-by-id id)))
-    (incf (score element))
-    (update-records-from-instance element)))
+  (incf (score el))
+  (update-records-from-instance el))
 
 (defmacro count-elements (&rest args)
   "Count the elements that match some patterns given by args (clsql's syntax)"

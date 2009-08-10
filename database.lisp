@@ -12,4 +12,3 @@
   (mapcar (lambda (table) (unless (table-exists-p table)
                             (create-view-from-class table)))
           tables))
-

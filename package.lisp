@@ -42,3 +42,32 @@ an input stream and get an output stream in response\)."
     (sb-ext:cancel-finalization socket)
     stream))
 
+;;; Add a `text' type to clsql
+;;; from http://lists.b9.com/pipermail/clsql/2009-January/001659.html
+;; (in-package :clsql-sys)
+;; (deftype text (&optional size)
+;;   "A piece of text of arbitrary length, typically the SQL text type."
+;;   (declare (ignore size))
+;;   'string)
+
+;; (defmethod database-get-type-specifier ((type (eql 'string)) args database db-type)
+;;   (declare (ignore database db-type))
+;;   (if args
+;;       (format nil "CHAR(~A)" (car args))
+;;       (format nil "VARCHAR(~D)" *default-string-length*)))
+ 
+;; (defmethod database-get-type-specifier ((type (eql 'varchar)) args
+;;                                         database db-type)
+;;   (declare (ignore database db-type))
+;;   (if args
+;;       (format nil "VARCHAR(~A)" (car args))
+;;       (format nil "VARCHAR(~D)" *default-string-length*)))
+ 
+;; (defmethod database-get-type-specifier ((type (eql 'text)) args database db-type)
+;;   (declare (ignore args database db-type))
+;;   "TEXT")
+
+;; (defmethod read-sql-value (val (type (eql 'text)) database db-type)
+;;   (declare (ignore database db-type))
+;;   val)
+
