@@ -8,15 +8,17 @@
   :description "A web interface to manage collections."
   :depends-on (:aserve :clsql-sqlite3 :ironclad)
   :components ((:file "package")
-               (:file "errors")
+               (:file "utilities")
+               (:file "errors"
+                      :depends-on ("package"))
                (:file "collections"
                       :depends-on ("package" "database"))
                (:file "database"
                       :depends-on ("package"))
                (:file "interface"
-                      :depends-on ("package" "errors"))
+                      :depends-on ("package" "errors" "utilities"))
                (:file "users"
-                      :depends-on ("database" "package" "errors"))
+                      :depends-on ("database" "package" "errors" "utilities"))
                (:file "elements"
-                      :depends-on ("database" "package" "errors"))))
+                      :depends-on ("database" "package" "errors" "utilities"))))
 

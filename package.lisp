@@ -7,8 +7,8 @@
   (:shadowing-import-from :ironclad :NULL)
   )
 
-; fix from
-; http://stackoverflow.com/questions/928163/allegroserve-on-sbcl-1-0-28-failing-with-accept-invalid-keyword-argument-auto
+;;; fix from
+;;; http://stackoverflow.com/questions/928163/allegroserve-on-sbcl-1-0-28-failing-with-accept-invalid-keyword-argument-auto
 (defmethod sb-bsd-sockets:socket-make-stream ((socket sb-bsd-sockets:socket)
                                &key input output
                                (element-type 'character)

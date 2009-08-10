@@ -21,7 +21,7 @@
     (digest-sequence *digest-algorithm*
                      (ascii-string-to-byte-array string))))
 
-;;;; Functions using special clsql syntax start here...
+;;; Functions using special clsql syntax start here...
 #.(locally-enable-sql-reader-syntax)
 
 (defun user-exists-p (name)
@@ -34,15 +34,14 @@
   (select 'user
           :where [and [= [slot-value 'user 'name] name]
                       [= [slot-value 'user 'password] (hash password)]]))
-;;;; ... and stop here
+;;; ... and stop here
 #.(restore-sql-reader-syntax-state)
 
 (defun valid-username-p (name)
   "Check if a username is valid (ie. non void and no spaces)"
-  (and
-   (not (string= name ""))
-   (not (find-if (lambda (x) (char= x #\Space)) name))))
-
+  (and (not (string-void-p name))
+       (not (string-has-spaces-p name))))
+            
 (defun valid-password-p (password)
   "Check if a password is valid using valid-username-p"
   ;; same rules for the username and the password

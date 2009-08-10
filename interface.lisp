@@ -1,7 +1,6 @@
 (in-package :collections)
 
-;;;; Some stuff to help defining new pages
-
+;;; Some stuff to help defining new pages
 (defmacro handle-errors (&body body)
   `(handler-case
        (progn ,@body)
@@ -48,8 +47,8 @@
        (:head (:title ,title))
        (:body ,@body)))))
 
-;;;; defined as a macro because the body contains
-;;;; html's specials form
+;;; defined as a macro because the body contains
+;;; html's specials form
 (defmacro standard-page (title &body body)
   `(html
     (:html
@@ -75,9 +74,9 @@
                              :maxlength "20"))
       ((:input :type "submit" :value ,submit-value)))))
 
-;;;; The interface's function start here
+;;; The interface's function start here
 
-;;;; Pages related to authentification
+;;; Pages related to authentification
 (add-page "/register" (name password)
   (if (and name password)
       ;; registration
@@ -94,7 +93,7 @@
         (info-page "You're now logged"))
       (user-pass-form "login" "Login")))
 
-; pages related to the collection
+;;; pages related to the collection
 (add-page "/list" ()
   (standard-page "List"
     (dolist (element (get-all-elements))
@@ -103,9 +102,26 @@
                 ((:a href (concatenate
                            'string "vote?id=" (write-to-string (id element))))
                  "(+1)"))))))
-;(add-page "/vote" (id)
-;  (if id
-;      (vote-for 
+(add-page "/vote" (id)
+  (if id
+      (handle-errors
+        (vote-for-id id)
+        (standard-page "Vote" "Thanks for the vote"))
+      (error-page "No id specified")))
 
-      
-
+(add-page "/add" (name image)
+  (if (and name image)
+      (handle-errors
+        (let ((el (make-element :name name
+                                :image image)))
+          (add-element el))
+        (standard-page "Adding an element" "The element has ben added"))
+      (standard-page "Adding an element"
+          ((:form :action "/add" :method "post")
+           "Name : " ((:input :type "text"
+                              :name "name"
+                              :maxlength "100"))
+           "Image path : " ((:input :type "text"
+                                    :name "image"
+                                    :maxlength "100"))
+           ((:input :type "submit" :value "Add"))))))
