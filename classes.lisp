@@ -18,13 +18,14 @@
    (description :accessor description
                 :type (string)
                 :initarg :description
-                :initform "")
-   (notes :reader notes
-          :db-kind :join
-          :db-info (:join-class note
-                    :home-key id
-                    :foreign-key element-id
-                    :set t))))
+                :initform ""))
+   ;; not working :(
+   ;; (notes :reader notes
+   ;;        :db-kind :join
+   ;;        :db-info (:join-class note
+   ;;                  :home-key id
+   ;;      	    :foreign-key item-id)))
+  (:base-table item))
 
 (def-view-class note (votable)
    ((title :accessor title
@@ -35,7 +36,9 @@
              :initarg :content)
     (item-id :reader item-id
              :type integer
-             :initarg :item-id)))
+             :initarg :item-id))
+   (:base-table note))
+
 
 (defmethod vote-for ((thing votable))
   (incf (votes thing))
@@ -45,12 +48,23 @@
 (defun get-instance-by-id (class id)
   (caar (select class
                 :where [= [slot-value class 'id] id]
-                :refresh t)))
+                :refresh t))) 
 
 (defun get-all-instances (class)
   ;; must loop because select return each element in a list
   (loop for i in (select class :refresh t)
        collect (car i)))
+
+(defmacro count-instances (class &rest args)
+  `(caar (select [count [*]] :from ,class
+                ,@(when args `(:where ,@args)))))
+
+;;; because clsql's joins don't works
+(defmethod notes ((i item))
+  (reduce (lambda (x y) (cons (car y) x))
+          (select 'note :from [note]
+                  :where [= [slot-value 'note 'item-id] (id i)]
+                  :refresh t)))
 #.(restore-sql-reader-syntax-state)
 
 (defmethod add-instance (instance)
@@ -62,10 +76,6 @@
     (launch-error "adding a note"
                   "bad item"))
   (call-next-method))
-
-(defmacro count-instances (class &rest args)
-  `(caar (select [count [*]] :from ,class
-                ,@(when args `(:where ,@args)))))
 
 (defmacro make-with-id (class &rest args)
   `(make-instance ,class ,@args :id (1+ (length (get-all-instances ,class)))))

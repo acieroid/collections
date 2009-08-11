@@ -9,7 +9,6 @@
                             (error-type e) (description e))))
      (simple-error () (error-page
                       (format nil "An unknown error happened")))))
-     ))
 
 (defmacro add-page (path params &body body)
   "Publish a page easily"
@@ -38,7 +37,13 @@
   `(html
     (:html
      (:head (:title ,title))
-     (:body ,@body))))
+     (:body
+      (:p
+       ((:a href "/") "List")
+       " - "
+       ((:a href "/additem") "Add")
+       (:br))
+      ,@body))))
 
 (define-page error-page (reason) (:title "Error") 
   (:h1 "Error")
@@ -86,9 +91,10 @@
               ((:a href (concatenate
                          'string "addnote?itemid=" id))
                "(add)")))))
+
 (defmethod htmlize ((what note))
   (let ((id (write-to-string (id what))))
-    (html (:b
+    (html (:b 
            ((:a href (concatenate 'string "viewnote?id="
                                   id))
             (:princ-safe (title what))))
@@ -119,7 +125,7 @@
       (user-pass-form "login" "Login")))
 
 ;;; pages related to the collection
-(add-page "/list" ()
+(add-page "/" ()
   (standard-page "List"
     (mapcar #'htmlize (get-all-instances 'item))))
 
@@ -129,30 +135,30 @@
            (get-instance-by-id
             'item (parse-integer id :junk-allowed t)))))
     (if item
-        (handle-errors
+        ;(handle-errors
+        (progn
           (when vote (vote-for item))
           (standard-page (:princ-safe (name item))
-            (htmlize item))
-          (mapcar #'htmlize (notes item)))
+            (htmlize item)
+            (mapcar #'htmlize (notes item))))
         (error-page "bad id"))))
 
 (add-page "/viewnote" (id vote)
   (if id
       (let* ((id (parse-integer id :junk-allowed t))
-             (note (get-instance-by-id id)))
+             (note (get-instance-by-id 'note id)))
         (if note
             (handle-errors
-             (vote-for note)
+             (when vote (vote-for note))
              (htmlize note))
             (error-page "bad id")))
       (error-page "bad id")))
 
-(add-page "/additem" (name image descr)
-  (if (and name image descr)
+(add-page "/additem" (name descr)
+  (if (and name descr)
       (handle-errors
         (let ((item (make-with-id 'item
                                   :name name
-                                  :image image
                                   :description descr)))
           (add-instance item))
         (standard-page "Adding an item" "The item has ben added"))
@@ -166,10 +172,6 @@
                                     :name "descr"
                                     :rows "15"
                                     :cols "50"))
-           (:br)
-           "Image path : " ((:input :type "text"
-                                    :name "image"
-                                    :maxlength "100"))
            (:br)
            ((:input :type "submit" :value "Add"))))))
 
