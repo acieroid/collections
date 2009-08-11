@@ -52,18 +52,6 @@
 (define-page info-page (info) (:title (:princ-safe info))
   (:p (:princ-safe info)))
 
-(defmacro user-pass-form (page submit-value)
-  "A form with username and password fields"
-  `(standard-page ,submit-value
-     ((:form :action ,page :method "post")
-      "Username : " ((:input :type "text"
-                             :name "name"
-                             :maxlength "20"))
-      "Password : " ((:input :type "password"
-                             :name "password"
-                             :maxlength "20"))
-      ((:input :type "submit" :value ,submit-value)))))
-
 (defmacro format-safe (control-string &rest arguments)
   `(:princ-safe (format nil ,control-string ,@arguments)))
 
@@ -106,25 +94,6 @@
 #.(locally-disable-sql-reader-syntax)                  
 
 ;;; The interface's function start here
-
-;;; Pages related to authentification
-(add-page "/register" (name password)
-  (if (and name password)
-      ;; registration
-      (handle-errors
-        (register-user name password)
-        (info-page "You're now registered, welcome !"))
-      ;; form
-      (user-pass-form "register" "Register")))
-
-(add-page "/login" (name password)
-  (if (and name password)
-      (handle-errors
-        (login-user name password)
-        (info-page "You're now logged"))
-      (user-pass-form "login" "Login")))
-
-;;; pages related to the collection
 (add-page "/" ()
   (standard-page "List"
     (mapcar #'htmlize (get-all-instances 'item))))

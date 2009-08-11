@@ -20,13 +20,7 @@
                       :depends-on ("package"
                                    "errors"
                                    "utilities"
-                                   "users"
                                    "classes"))
-               (:file "users"
-                      :depends-on ("database"
-                                   "package"
-                                   "errors"
-                                   "utilities"))
                (:file "classes"
                       :depends-on ("database"
                                    "package"
